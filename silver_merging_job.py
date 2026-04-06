@@ -4,7 +4,7 @@ from pyspark.context import SparkConf, SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 from pyspark.sql import functions as F
-
+from glue_libs.db_utils import update_process_number
 from glue_libs.config import GlueJobConfig, SILVER_REQUIRED_ARGS
 
 # 1. 파라미터 파싱
@@ -119,6 +119,9 @@ else:
     else:
         raise ValueError(f"지원하지 않는 load_type: {load_type}")
 
+# 6. 상태 플래그 갱신 (01 -> 02)
+logger.info("Silver 병합 완료. 관리 테이블의 process_number 플래그를 '02' 로 갱신합니다.")
+update_process_number(spark, cfg, current_status='01', new_status='02')
 
 logger.info("Silver 데이터 병합(Merge) 프로세스가 정상 종료되었습니다.")
 job.commit()

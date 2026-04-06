@@ -117,5 +117,10 @@ logger.info(f"Target S3: {final_s3_path}  |  Write 모드: {write_mode}")
     .parquet(final_s3_path)
 )
 
-logger.info(f"{target_table} 수집 스크립트 실행이 정상 완료되었습니다.")
+# 7. 상태 플래그 갱신 (00 -> 01)
+from glue_libs.db_utils import update_process_number
+logger.info("수집 완료. 관리 테이블의 process_number 플래그를 '01'(Bronze 통과) 로 갱신합니다.")
+update_process_number(spark, cfg, current_status='00', new_status='01')
+
+logger.info(f"{cfg.target_table} 수집 스크립트 실행이 정상 완료되었습니다.")
 job.commit()
