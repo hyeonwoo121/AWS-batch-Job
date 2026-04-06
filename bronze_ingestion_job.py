@@ -10,10 +10,10 @@ from pyspark.sql import functions as F
 # glue_libs.zip을 Glue Job의 "Python library path"에 등록해두면
 # 아래처럼 외부 모듈을 import해서 사용할 수 있습니다.
 # ─────────────────────────────────────────────────────────────────
-from glue_libs.config import GlueJobConfig, REQUIRED_ARGS
+from glue_libs.config import GlueJobConfig, BRONZE_REQUIRED_ARGS
 
 # 1. 파라미터 파싱 → GlueJobConfig에 위임
-args = getResolvedOptions(sys.argv, REQUIRED_ARGS)
+args = getResolvedOptions(sys.argv, BRONZE_REQUIRED_ARGS)
 cfg  = GlueJobConfig(args)   # 모든 커넥션/경로 정보는 cfg 객체가 관리
 
 # 2. Spark & AWS Glue Context 초기화

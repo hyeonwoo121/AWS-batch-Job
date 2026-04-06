@@ -2,15 +2,9 @@
 glue_libs/config.py
 --------------------
 AWS Glue Job 파라미터 파싱 및 DB 커넥션 프로퍼티 집중 관리 모듈.
-메인 Job 스크립트에서 import하여 사용합니다.
-
-사용법:
-    from glue_libs.config import GlueJobConfig
-    cfg = GlueJobConfig(args)
 """
 
-# Glue Job에서 요구할 파라미터 키 목록 (getResolvedOptions에 전달)
-REQUIRED_ARGS = [
+BRONZE_REQUIRED_ARGS = [
     'JOB_NAME',
     'TARGET_TABLE',
     'BRONZE_S3_PATH',
@@ -22,46 +16,56 @@ REQUIRED_ARGS = [
     'SOURCE_PASSWORD',
 ]
 
+SILVER_REQUIRED_ARGS = [
+    'JOB_NAME',
+    'TARGET_TABLE',
+    'BRONZE_S3_PATH',
+    'SILVER_S3_PATH',
+    'ICEBERG_DB_NAME',   # AWS Glue Data Catalog상의 Database 이름
+    'AURORA_JDBC_URL',
+    'AURORA_USER',
+    'AURORA_PASSWORD',
+]
 
 class GlueJobConfig:
     """
-    Glue Job 파라미터를 받아서 각 설정값 및
-    JDBC 커넥션 프로퍼티를 한 곳에서 관리하는 설정 클래스.
+    Bronze 및 Silver Job을 모두 커버하는 파라미터/커넥션 통합 관리 객체
     """
-
     def __init__(self, args: dict):
-        """
-        Args:
-            args (dict): getResolvedOptions()로 파싱된 파라미터 딕셔너리
-        """
-        self.job_name       = args['JOB_NAME']
-        self.target_table   = args['TARGET_TABLE']
-        self.bronze_s3_path = args['BRONZE_S3_PATH'].rstrip('/') + '/'
+        self.job_name       = args.get('JOB_NAME', 'unknown_job')
+        self.target_table   = args.get('TARGET_TABLE')
+        
+        # S3 Paths
+        _bronze = args.get('BRONZE_S3_PATH')
+        self.bronze_s3_path = _bronze.rstrip('/') + '/' if _bronze else None
+        
+        _silver = args.get('SILVER_S3_PATH')
+        self.silver_s3_path = _silver.rstrip('/') + '/' if _silver else None
+        
+        # Iceberg Config
+        self.iceberg_db_name = args.get('ICEBERG_DB_NAME')
 
         # ── Aurora (Gold 계층 관리 테이블 DB) 접속 정보 ──────────────────────
-        self.aurora_jdbc_url = args['AURORA_JDBC_URL']
+        self.aurora_jdbc_url = args.get('AURORA_JDBC_URL')
         self.aurora_conn_properties = {
-            "user":     args['AURORA_USER'],
-            "password": args['AURORA_PASSWORD'],
+            "user":     args.get('AURORA_USER'),
+            "password": args.get('AURORA_PASSWORD'),
             "driver":   "org.postgresql.Driver",
-        }
+        } if self.aurora_jdbc_url else None
 
-        # ── 연계 원천 PostgreSQL 접속 정보 ───────────────────────────────────
-        self.source_jdbc_url = args['SOURCE_JDBC_URL']
+        # ── 연계 원천 PostgreSQL 접속 정보 (Bronze 잡 전용) ─────────
+        self.source_jdbc_url = args.get('SOURCE_JDBC_URL')
         self.source_conn_properties = {
-            "user":     args['SOURCE_USER'],
-            "password": args['SOURCE_PASSWORD'],
+            "user":     args.get('SOURCE_USER'),
+            "password": args.get('SOURCE_PASSWORD'),
             "driver":   "org.postgresql.Driver",
-        }
+        } if self.source_jdbc_url else None
 
-    def get_s3_output_path(self, table_name: str) -> str:
-        """테이블 이름을 받아 S3 최종 저장 경로를 반환합니다."""
+    def get_bronze_path(self, table_name: str) -> str:
         return f"{self.bronze_s3_path}{table_name}/"
+        
+    def get_silver_path(self, table_name: str) -> str:
+        return f"{self.silver_s3_path}{table_name}/"
 
     def __repr__(self):
-        return (
-            f"GlueJobConfig("
-            f"job={self.job_name}, "
-            f"target={self.target_table}, "
-            f"s3={self.bronze_s3_path})"
-        )
+        return f"GlueJobConfig(job={self.job_name}, target={self.target_table})"
