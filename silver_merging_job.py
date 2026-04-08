@@ -1,8 +1,8 @@
 import sys
-from awsglue.utils import getResolvedOptions
-from pyspark.context import SparkConf, SparkContext
-from awsglue.context import GlueContext
-from awsglue.job import Job
+from awsglue.utils import getResolvedOptions # type: ignore
+from pyspark.context import SparkConf, SparkContext # type: ignore
+from awsglue.context import GlueContext # type: ignore
+from awsglue.job import Job # type: ignore
 from pyspark.sql import functions as F
 from glue_libs.db_utils import update_process_number
 from glue_libs.config import GlueJobConfig, SILVER_REQUIRED_ARGS

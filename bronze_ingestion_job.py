@@ -1,16 +1,16 @@
 import sys
-from awsglue.transforms import *
-from awsglue.utils import getResolvedOptions
-from pyspark.context import SparkContext
-from awsglue.context import GlueContext
-from awsglue.job import Job
-from pyspark.sql import functions as F
+from awsglue.transforms import *  # type: ignore
+from awsglue.utils import getResolvedOptions  # type: ignore
+from pyspark.context import SparkContext  # type: ignore
+from awsglue.context import GlueContext  # type: ignore
+from awsglue.job import Job  # type: ignore
+from pyspark.sql import functions as F  # type: ignore
 
 # ─────────────────────────────────────────────────────────────────
 # glue_libs.zip을 Glue Job의 "Python library path"에 등록해두면
 # 아래처럼 외부 모듈을 import해서 사용할 수 있습니다.
-# ─────────────────────────────────────────────────────────────────
-from glue_libs.config import GlueJobConfig, BRONZE_REQUIRED_ARGS
+# ───────────────────────────────────────────────────────────────── 
+from glue_libs.config import GlueJobConfig, BRONZE_REQUIRED_ARGS  # type: ignore
 
 # 1. 파라미터 파싱 → GlueJobConfig에 위임
 args = getResolvedOptions(sys.argv, BRONZE_REQUIRED_ARGS)
@@ -118,7 +118,7 @@ logger.info(f"Target S3: {final_s3_path}  |  Write 모드: {write_mode}")
 )
 
 # 7. 상태 플래그 갱신 (00 -> 01)
-from glue_libs.db_utils import update_process_number
+from glue_libs.db_utils import update_process_number  # type: ignore
 logger.info("수집 완료. 관리 테이블의 process_number 플래그를 '01'(Bronze 통과) 로 갱신합니다.")
 update_process_number(spark, cfg, current_status='00', new_status='01')
 
